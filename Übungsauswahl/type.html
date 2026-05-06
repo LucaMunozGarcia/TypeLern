@@ -1,1 +1,593 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeMaster — Tippen</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
 
+    /* ─── TYPING PAGE LAYOUT ─────────────────────────────────── */
+    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+    .type-page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ─── TOP BAR ─────────────────────────────────────────────── */
+    .type-topbar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 18px 0 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .back-btn {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-3);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color var(--trans);
+      padding: 0;
+    }
+    .back-btn:hover { color: var(--text-2); }
+    .ex-name-bar {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+    .topbar-center {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .progress-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .progress-track-top {
+      width: 120px;
+      height: 2px;
+      background: var(--bg-3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill-top {
+      height: 100%;
+      background: var(--green);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 24px;
+    }
+    .stat-block { text-align: center; }
+    .stat-val {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      transition: color var(--trans);
+    }
+    .stat-val.warn { color: var(--red); }
+    .stat-val.good { color: var(--green); }
+    .stat-lbl {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-top: 3px;
+    }
+
+    /* ─── MAIN CONTENT AREA ──────────────────────────────────── */
+    .type-main {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      padding: 20px 0 12px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ─── TEXT + KEYBOARD COLUMN ─────────────────────────────── */
+    .type-col-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    /* ─── TEXT BOX ────────────────────────────────────────────── */
+    .type-box {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      flex-shrink: 0;
+    }
+    .type-text {
+      font-family: var(--mono);
+      font-size: 20px;
+      line-height: 1.9;
+      letter-spacing: 0.02em;
+      word-break: break-word;
+    }
+    .ch { position: relative; }
+    .ch-done { color: var(--green); }
+    .ch-error {
+      color: var(--red);
+      text-decoration: underline;
+      text-decoration-color: var(--red);
+      text-decoration-style: wavy;
+    }
+    .ch-cursor {
+      position: relative;
+    }
+    .ch-cursor::before {
+      content: '';
+      position: absolute;
+      left: -1px;
+      top: 2px;
+      bottom: 2px;
+      width: 2px;
+      background: var(--text);
+      border-radius: 1px;
+      animation: blink 0.9s ease infinite;
+    }
+    .ch-rest { color: var(--text-3); }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      45%, 55% { opacity: 0; }
+    }
+    .type-hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: var(--mono);
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── KEYBOARD ────────────────────────────────────────────── */
+    .keyboard-wrap {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px 16px;
+      flex-shrink: 0;
+    }
+    .kb-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .kb-row:last-child { margin-bottom: 0; }
+    .key {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-bottom: 2px solid var(--border-hi);
+      border-radius: 5px;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      min-width: 34px;
+      padding: 0 5px;
+      user-select: none;
+      transition: background 0.06s, color 0.06s, transform 0.06s, border-color 0.06s;
+      cursor: default;
+      letter-spacing: 0;
+    }
+    .key-wide  { min-width: 52px; }
+    .key-xwide { min-width: 64px; }
+    .key-xxwide{ min-width: 80px; }
+    .key-space { min-width: 200px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    .key.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+      border-bottom-color: #aaa;
+      transform: translateY(1px);
+    }
+    .key.next-hint {
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .key.active.next-hint {
+      background: var(--green);
+      color: var(--bg);
+      border-color: var(--green);
+    }
+
+    /* ─── TIPS COLUMN ─────────────────────────────────────────── */
+    .type-col-tips {
+      width: 180px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .tips-header {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .tip-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.5;
+      opacity: 0;
+      transform: translateX(8px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .tip-card.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .tip-card.tip-green { border-left: 2px solid var(--green); }
+    .tip-card.tip-red   { border-left: 2px solid var(--red); }
+    .tip-card.tip-amber { border-left: 2px solid var(--amber); }
+    .tip-card.tip-gray  { border-left: 2px solid var(--border-hi); }
+  </style>
+</head>
+<body>
+
+<div class="type-page">
+
+  <!-- TOP BAR -->
+  <div class="type-topbar">
+    <div class="topbar-left">
+      <button class="back-btn" id="btn-back">← zurück</button>
+      <span class="ex-name-bar" id="ex-name-bar">—</span>
+    </div>
+    <div class="topbar-center">
+      <span class="progress-label" id="prog-label">0%</span>
+      <div class="progress-track-top">
+        <div class="progress-fill-top" id="prog-fill"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="stat-block">
+        <div class="stat-val" id="stat-time">—</div>
+        <div class="stat-lbl">Sekunden</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-val" id="stat-wpm">0</div>
+        <div class="stat-lbl">WPM</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-val" id="stat-acc">100%</div>
+        <div class="stat-lbl">Genau</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-val" id="stat-errors">0</div>
+        <div class="stat-lbl">Fehler</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="type-main">
+
+    <!-- TEXT + KEYBOARD -->
+    <div class="type-col-main">
+      <div class="type-box" id="type-box">
+        <div class="type-text" id="type-text"></div>
+      </div>
+      <div class="type-hint" id="type-hint">— tippe einfach los —</div>
+      <div style="flex:1;"></div>
+      <div class="keyboard-wrap">
+        <div id="keyboard"></div>
+      </div>
+    </div>
+
+    <!-- TIPS -->
+    <div class="type-col-tips">
+      <div class="tips-header">Tipps</div>
+      <div class="tips-list" id="tips-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  /* ── Load exercise from sessionStorage ── */
+  const ex = JSON.parse(sessionStorage.getItem('tm_exercise') || 'null');
+  if (!ex) { window.location.href = 'index.html'; }
+
+  /* ── State ── */
+  const S = {
+    pos: 0,
+    errors: 0,
+    totalTyped: 0,
+    startTime: null,
+    timerInterval: null,
+    tipTimeout: null,
+    timeLeft: ex ? ex.time : 60,
+    activeKeyTimeout: null,
+    finished: false
+  };
+
+  /* ── DOM refs ── */
+  const $time    = document.getElementById('stat-time');
+  const $wpm     = document.getElementById('stat-wpm');
+  const $acc     = document.getElementById('stat-acc');
+  const $errors  = document.getElementById('stat-errors');
+  const $prog    = document.getElementById('prog-fill');
+  const $progLbl = document.getElementById('prog-label');
+  const $text    = document.getElementById('type-text');
+  const $hints   = document.getElementById('type-hint');
+  const $tips    = document.getElementById('tips-list');
+  const $kbName  = document.getElementById('ex-name-bar');
+
+  /* ── Init ── */
+  $kbName.textContent = ex.title;
+  $time.textContent   = ex.time;
+  buildKeyboard();
+  renderText();
+  highlightNextKey();
+
+  /* ── RENDER TEXT ── */
+  function renderText() {
+    const t = ex.text;
+    $text.innerHTML = t.split('').map((ch, i) => {
+      const display = ch === ' ' ? '&nbsp;' : ch;
+      if (i < S.pos)       return `<span class="ch ch-done">${display}</span>`;
+      if (i === S.pos)     return `<span class="ch ch-cursor ch-rest">${display}</span>`;
+      return `<span class="ch ch-rest">${display}</span>`;
+    }).join('');
+  }
+
+  function updateCharAt(i, cls) {
+    const spans = $text.querySelectorAll('.ch');
+    if (!spans[i]) return;
+    spans[i].className = `ch ${cls}`;
+  }
+
+  /* ── KEYBOARD ── */
+  const KB_ROWS = [
+    ['`','1','2','3','4','5','6','7','8','9','0','ß','´','⌫'],
+    ['Tab','q','w','e','r','t','z','u','i','o','p','ü','+','#'],
+    ['Caps','a','s','d','f','g','h','j','k','l','ö','ä','⏎'],
+    ['⇧','<','y','x','c','v','b','n','m',',','.','-','⇧'],
+    ['Leertaste']
+  ];
+  const KB_WIDTH = {
+    '⌫':'key-wide','Tab':'key-wide','Caps':'key-xwide',
+    '⏎':'key-xwide','⇧':'key-xxwide','Leertaste':'key-space'
+  };
+
+  function buildKeyboard() {
+    const kb = document.getElementById('keyboard');
+    kb.innerHTML = KB_ROWS.map(row =>
+      `<div class="kb-row">${row.map(k =>
+        `<div class="key ${KB_WIDTH[k]||''}" data-key="${k}">${k}</div>`
+      ).join('')}</div>`
+    ).join('');
+  }
+
+  function keyLabel(ch) {
+    if (ch === ' ') return 'Leertaste';
+    return ch.toLowerCase();
+  }
+
+  function flashKey(ch) {
+    const lbl = keyLabel(ch);
+    const el = document.querySelector(`.key[data-key="${lbl}"]`)
+            || document.querySelector(`.key[data-key="${ch}"]`);
+    if (!el) return;
+    el.classList.add('active');
+    if (S.activeKeyTimeout) clearTimeout(S.activeKeyTimeout);
+    S.activeKeyTimeout = setTimeout(() => el.classList.remove('active'), 150);
+  }
+
+  function highlightNextKey() {
+    document.querySelectorAll('.key.next-hint').forEach(k => k.classList.remove('next-hint'));
+    if (S.pos >= ex.text.length) return;
+    const next = ex.text[S.pos];
+    const lbl = keyLabel(next);
+    const el = document.querySelector(`.key[data-key="${lbl}"]`)
+            || document.querySelector(`.key[data-key="${next}"]`);
+    if (el) el.classList.add('next-hint');
+  }
+
+  /* ── TIMER ── */
+  function startTimer() {
+    S.startTime = Date.now();
+    S.timerInterval = setInterval(() => {
+      S.timeLeft--;
+      $time.textContent = S.timeLeft;
+      $time.className = 'stat-val' + (S.timeLeft <= 10 ? ' warn' : '');
+      if (S.timeLeft <= 0) { clearInterval(S.timerInterval); finish(); }
+    }, 1000);
+    scheduleTip();
+  }
+
+  /* ── WPM / ACCURACY ── */
+  function calcWPM() {
+    if (!S.startTime) return 0;
+    const min = (Date.now() - S.startTime) / 60000;
+    return min > 0 ? Math.round((S.pos / 5) / min) : 0;
+  }
+  function calcAcc() {
+    const total = S.totalTyped;
+    return total > 0 ? Math.round(((total - S.errors) / total) * 100) : 100;
+  }
+
+  /* ── TIPS ── */
+  const TIPS = {
+    green: [
+      'Perfektes Tempo! 🎯',
+      'Super Genauigkeit!',
+      'Weiter so!',
+      'Klasse Rhythmus!',
+      'Du bist auf Kurs 🚀'
+    ],
+    red: [
+      'Langsamer & präziser!',
+      'Genauigkeit vor Speed.',
+      'Tief durchatmen.',
+      'Fokus auf die Zeichen.',
+      'Qualität > Quantität.'
+    ],
+    amber: [
+      'Guter Rhythmus!',
+      'Noch etwas schneller?',
+      'Vertraue deinen Fingern.',
+      'Schau auf den nächsten Buchstaben.',
+      'Du machst Fortschritte!'
+    ],
+    gray: [
+      'Finger auf die Grundreihe.',
+      'Augen auf den Text.',
+      'Kein Blick auf die Tastatur!',
+      'Entspannte Hände.'
+    ]
+  };
+
+  function addTip(type) {
+    const list = TIPS[type];
+    const msg = list[Math.floor(Math.random() * list.length)];
+    const pill = document.createElement('div');
+    pill.className = `tip-card tip-${type}`;
+    pill.textContent = msg;
+    $tips.insertBefore(pill, $tips.firstChild);
+    while ($tips.children.length > 5) $tips.removeChild($tips.lastChild);
+    requestAnimationFrame(() => requestAnimationFrame(() => pill.classList.add('show')));
+  }
+
+  function scheduleTip() {
+    const delay = 6000 + Math.random() * 9000;
+    S.tipTimeout = setTimeout(() => {
+      if (S.finished) return;
+      const wpm = calcWPM();
+      const acc = calcAcc();
+      if (acc < 85)         addTip('red');
+      else if (wpm > 65)    addTip('green');
+      else if (wpm < 20)    addTip('amber');
+      else                  addTip(Math.random() > 0.5 ? 'green' : 'gray');
+      scheduleTip();
+    }, delay);
+  }
+
+  /* ── KEYDOWN HANDLER ── */
+  document.addEventListener('keydown', onKey);
+
+  function onKey(e) {
+    if (S.finished) return;
+    if (e.key === 'Escape') { window.location.href = 'index.html'; return; }
+    if (e.key === 'Backspace') { e.preventDefault(); return; }
+    if (e.key.length !== 1 && e.key !== 'Enter') return;
+
+    const ch = e.key === 'Enter' ? '\n' : e.key;
+
+    // start timer on first keystroke
+    if (!S.startTime) {
+      startTimer();
+      $hints.textContent = '';
+      $time.textContent = ex.time;
+    }
+
+    e.preventDefault();
+    S.totalTyped++;
+    flashKey(ch);
+
+    const expected = ex.text[S.pos];
+    if (ch === expected) {
+      updateCharAt(S.pos, 'ch-done');
+      S.pos++;
+      // progress
+      const pct = Math.round((S.pos / ex.text.length) * 100);
+      $prog.style.width = pct + '%';
+      $progLbl.textContent = pct + '%';
+      // cursor
+      if (S.pos < ex.text.length) updateCharAt(S.pos, 'ch-cursor ch-rest');
+      if (S.pos >= ex.text.length) { clearInterval(S.timerInterval); finish(); return; }
+    } else {
+      S.errors++;
+      $errors.textContent = S.errors;
+      $errors.classList.add('warn');
+      setTimeout(() => $errors.classList.remove('warn'), 400);
+      // flash red on current char
+      updateCharAt(S.pos, 'ch-cursor ch-error');
+      setTimeout(() => { if (S.pos < ex.text.length) updateCharAt(S.pos, 'ch-cursor ch-rest'); }, 280);
+    }
+
+    $wpm.textContent = calcWPM();
+    const acc = calcAcc();
+    $acc.textContent = acc + '%';
+    $acc.className = 'stat-val' + (acc < 85 ? ' warn' : acc >= 95 ? ' good' : '');
+
+    highlightNextKey();
+  }
+
+  /* ── FINISH ── */
+  function finish() {
+    S.finished = true;
+    clearTimeout(S.tipTimeout);
+    document.removeEventListener('keydown', onKey);
+
+    const elapsed = S.startTime ? Math.round((Date.now() - S.startTime) / 1000) : ex.time;
+    sessionStorage.setItem('tm_result', JSON.stringify({
+      exercise: ex.title,
+      wpm:    calcWPM(),
+      acc:    calcAcc(),
+      errors: S.errors,
+      time:   elapsed,
+      chars:  S.pos,
+      total:  ex.text.length
+    }));
+    setTimeout(() => { window.location.href = 'result.html'; }, 600);
+  }
+
+  /* ── BACK ── */
+  document.getElementById('btn-back').addEventListener('click', () => {
+    clearInterval(S.timerInterval);
+    clearTimeout(S.tipTimeout);
+    window.location.href = 'index.html';
+  });
+</script>
+</body>
+</html>
