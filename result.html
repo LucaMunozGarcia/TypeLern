@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeMaster — Ergebnis</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+    .result-wrap {
+      width: 100%;
+      max-width: 540px;
+      padding: 0 20px 60px;
+      animation: fadeUp 0.4s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────────── */
+    .res-header {
+      text-align: center;
+      padding: 40px 0 36px;
+    }
+    .res-grade {
+      font-size: 56px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .res-title {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .res-subtitle {
+      font-size: 14px;
+      color: var(--text-2);
+    }
+    .res-ex-name {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-top: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── STATS GRID ─────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      text-align: center;
+      transition: border-color 0.3s ease;
+    }
+    .stat-card.highlight { border-color: var(--green); }
+    .stat-card.highlight .sc-val { color: var(--green); }
+    .stat-card.warn-card { border-color: var(--red); }
+    .stat-card.warn-card .sc-val { color: var(--red); }
+    .sc-val {
+      font-family: var(--mono);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 6px;
+      transition: color 0.3s ease;
+    }
+    .sc-lbl {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-3);
+    }
+
+    /* ─── BARS ───────────────────────────────────────────────── */
+    .bars-section { margin-bottom: 28px; }
+    .bar-row { margin-bottom: 16px; }
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+    .bar-labels span:last-child {
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+    .bar-track {
+      height: 4px;
+      background: var(--bg-3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      width: 0%;
+      transition: width 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .bar-fill.green { background: var(--green); }
+    .bar-fill.red   { background: var(--red); }
+    .bar-fill.amber { background: var(--amber); }
+
+    /* ─── ACTION BUTTONS ─────────────────────────────────────── */
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn-lg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all var(--trans);
+    }
+    .btn-retry {
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+    }
+    .btn-retry:hover { background: #c8c8c8; }
+    .btn-retry:active { transform: scale(0.98); }
+    .btn-select {
+      background: transparent;
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .btn-select:hover { border-color: var(--border-hi); color: var(--text); background: var(--bg-2); }
+
+    /* ─── DIVIDER WITH LOGO ──────────────────────────────────── */
+    .res-logo {
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-3);
+      padding: 20px 0 0;
+    }
+    .res-logo span { color: var(--green); }
+  </style>
+</head>
+<body>
+
+<div class="result-wrap">
+
+  <div class="res-header">
+    <div class="res-grade" id="res-grade">—</div>
+    <div class="res-title" id="res-title">Ergebnis</div>
+    <div class="res-subtitle" id="res-subtitle">—</div>
+    <div class="res-ex-name" id="res-ex-name">—</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card" id="card-wpm">
+      <div class="sc-val" id="r-wpm">0</div>
+      <div class="sc-lbl">Wörter / Min</div>
+    </div>
+    <div class="stat-card" id="card-acc">
+      <div class="sc-val" id="r-acc">0%</div>
+      <div class="sc-lbl">Genauigkeit</div>
+    </div>
+    <div class="stat-card" id="card-time">
+      <div class="sc-val" id="r-time">0s</div>
+      <div class="sc-lbl">Zeit</div>
+    </div>
+    <div class="stat-card" id="card-errors">
+      <div class="sc-val" id="r-errors">0</div>
+      <div class="sc-lbl">Fehler</div>
+    </div>
+  </div>
+
+  <div class="bars-section">
+    <div class="bar-row">
+      <div class="bar-labels">
+        <span>Genauigkeit</span>
+        <span id="b-acc-lbl">0%</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="b-acc" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-labels">
+        <span>Abgetippter Text</span>
+        <span id="b-prog-lbl">0%</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill amber" id="b-prog" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-lg btn-retry" id="btn-retry">⟳ Nochmal versuchen</button>
+    <button class="btn-lg btn-select" id="btn-select">← Andere Übung wählen</button>
+  </div>
+
+  <div class="res-logo">type<span>master</span></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const res = JSON.parse(sessionStorage.getItem('tm_result') || 'null');
+  if (!res) { window.location.href = 'index.html'; }
+
+  function grade(wpm, acc) {
+    if (acc >= 97 && wpm >= 70) return { emoji:'🏆', title:'Ausgezeichnet!',   msg:'Absolutes Profi-Niveau. Beeindruckend!' };
+    if (acc >= 95 && wpm >= 50) return { emoji:'🥇', title:'Sehr gut!',        msg:'Tolle Kombination aus Speed und Präzision.' };
+    if (acc >= 90 && wpm >= 35) return { emoji:'🥈', title:'Gut gemacht!',     msg:'Solide Leistung. Noch etwas üben!' };
+    if (acc >= 80 && wpm >= 20) return { emoji:'🎯', title:'Guter Anfang!',    msg:'Mehr Präzision, dann kommt auch der Speed.' };
+    return                             { emoji:'⭐', title:'Weitermachen!',    msg:'Jede Übung bringt dich weiter.' };
+  }
+
+  function animateVal(el, final, suffix, duration) {
+    let start = null;
+    const step = ts => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      el.textContent = Math.round(p * final) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  window.addEventListener('load', () => {
+    const g = grade(res.wpm, res.acc);
+    const prog = Math.round((res.chars / res.total) * 100);
+
+    document.getElementById('res-grade').textContent   = g.emoji;
+    document.getElementById('res-title').textContent   = g.title;
+    document.getElementById('res-subtitle').textContent = g.msg;
+    document.getElementById('res-ex-name').textContent = res.exercise;
+
+    animateVal(document.getElementById('r-wpm'),    res.wpm,    '',  900);
+    animateVal(document.getElementById('r-acc'),    res.acc,    '%', 900);
+    animateVal(document.getElementById('r-time'),   res.time,   's', 700);
+    animateVal(document.getElementById('r-errors'), res.errors, '',  700);
+
+    // Highlight good/bad cards
+    if (res.acc >= 95)   document.getElementById('card-acc').classList.add('highlight');
+    if (res.acc < 80)    document.getElementById('card-acc').classList.add('warn-card');
+    if (res.errors === 0) document.getElementById('card-errors').classList.add('highlight');
+    if (res.errors > 10) document.getElementById('card-errors').classList.add('warn-card');
+    if (res.wpm >= 50)   document.getElementById('card-wpm').classList.add('highlight');
+
+    // Bars (delayed so transition fires)
+    setTimeout(() => {
+      const accBar = document.getElementById('b-acc');
+      accBar.style.width = res.acc + '%';
+      accBar.classList.add(res.acc >= 85 ? 'green' : 'red');
+      document.getElementById('b-acc-lbl').textContent = res.acc + '%';
+
+      document.getElementById('b-prog').style.width = prog + '%';
+      document.getElementById('b-prog-lbl').textContent = prog + '%';
+    }, 200);
+  });
+
+  document.getElementById('btn-retry').addEventListener('click', () => {
+    window.location.href = 'type.html';
+  });
+  document.getElementById('btn-select').addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btn-retry').click();
+    if (e.key === 'Escape') document.getElementById('btn-select').click();
+  });
+</script>
+</body>
+</html>

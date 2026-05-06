@@ -1,0 +1,8 @@
+{
+  "id": 4,
+  "title": "Programmier-Code",
+  "description": "Typische JavaScript-Syntax mit Klammern, Sonderzeichen und Einrückungen.",
+  "level": "hard",
+  "time": 120,
+  "text": "const greet = (name) => { return `Hallo, ${name}!`; }; const result = [1, 2, 3].filter(n => n > 1).map(n => n * 2); console.log(greet('Welt'));"
+}
