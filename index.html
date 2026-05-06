@@ -1,1 +1,297 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeMaster — Übungsauswahl</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ─── FILTER BAR ──────────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .filter-btn {
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all var(--trans);
+      letter-spacing: 0.02em;
+    }
+    .filter-btn:hover { border-color: var(--border-hi); color: var(--text); }
+    .filter-btn.active {
+      background: var(--bg-3);
+      border-color: var(--border-hi);
+      color: var(--text);
+    }
 
+    /* ─── EXERCISE GRID ──────────────────────────────────────── */
+    .ex-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .ex-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color var(--trans), background var(--trans), transform 0.1s ease;
+      user-select: none;
+      position: relative;
+    }
+    .ex-card:hover { border-color: var(--border-hi); background: var(--bg-2); }
+    .ex-card.selected {
+      border-color: var(--green);
+      background: var(--bg-2);
+    }
+    .ex-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #0a0a0a;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 22px;
+      text-align: center;
+    }
+    .ex-card-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .ex-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      padding-right: 28px;
+    }
+    .ex-desc {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .ex-meta {
+      display: flex;
+      gap: 16px;
+    }
+    .ex-preview {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ─── BOTTOM BAR ─────────────────────────────────────────── */
+    .bottom-bar {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 16px 0 0;
+      margin-top: 8px;
+    }
+    .bottom-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .selected-info {
+      font-size: 13px;
+      color: var(--text-2);
+    }
+    .selected-info strong { color: var(--text); }
+
+    /* ─── EMPTY STATE ─────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-3);
+      display: none;
+    }
+    .empty-state.show { display: block; }
+    .empty-icon { font-size: 32px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <nav class="topnav">
+    <div class="logo">type<span>master</span></div>
+    <div class="nav-hint">↑ wähle · ↵ starten</div>
+  </nav>
+
+  <h1 class="page-title">Übungen</h1>
+  <p class="page-sub">Wähle eine Übung und verbessere deine Tipp-Geschwindigkeit.</p>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">Alle</button>
+    <button class="filter-btn" data-filter="easy">Einfach</button>
+    <button class="filter-btn" data-filter="medium">Mittel</button>
+    <button class="filter-btn" data-filter="hard">Schwer</button>
+  </div>
+
+  <div class="ex-grid" id="ex-grid">
+    <div class="empty-state show" id="empty-state">
+      <div class="empty-icon">○</div>
+      <div>Übungen werden geladen…</div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <div class="bottom-inner">
+    <div class="selected-info" id="selected-info">
+      Keine Übung ausgewählt
+    </div>
+    <button class="btn btn-primary" id="btn-start" disabled style="opacity:0.4; min-width:140px;">
+      Starten →
+    </button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  // Exercise JSON file names to load
+  const EXERCISE_FILES = [
+    'exercises/grundlagen.json',
+    'exercises/zahlen.json',
+    'exercises/saetze.json',
+    'exercises/code.json',
+    'exercises/zitat.json'
+  ];
+
+  let exercises = [];
+  let selectedId = null;
+  let activeFilter = 'all';
+
+  async function loadExercises() {
+    const results = await Promise.allSettled(
+      EXERCISE_FILES.map(f => fetch(f).then(r => r.json()))
+    );
+    exercises = results
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
+    renderGrid();
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('ex-grid');
+    const empty = document.getElementById('empty-state');
+    const filtered = activeFilter === 'all'
+      ? exercises
+      : exercises.filter(e => e.level === activeFilter);
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '';
+      empty.classList.add('show');
+      grid.appendChild(empty);
+      return;
+    }
+    empty.classList.remove('show');
+
+    grid.innerHTML = filtered.map(ex => `
+      <div class="ex-card ${ex.id === selectedId ? 'selected' : ''}"
+           data-id="${ex.id}"
+           role="button"
+           tabindex="0"
+           aria-label="${ex.title} auswählen">
+        <div class="ex-card-top">
+          <span class="badge badge-${ex.level}">
+            ${ex.level === 'easy' ? 'Einfach' : ex.level === 'medium' ? 'Mittel' : 'Schwer'}
+          </span>
+        </div>
+        <div class="ex-title">${ex.title}</div>
+        <div class="ex-desc">${ex.description}</div>
+        <div class="ex-meta">
+          <span class="stat-pill">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            ${ex.time}s
+          </span>
+          <span class="stat-pill">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>
+            </svg>
+            ${ex.text.length} Zeichen
+          </span>
+        </div>
+        <div class="ex-preview">${ex.text.substring(0, 55)}…</div>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('.ex-card').forEach(card => {
+      card.addEventListener('click', () => selectEx(parseInt(card.dataset.id)));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') selectEx(parseInt(card.dataset.id));
+      });
+    });
+  }
+
+  function selectEx(id) {
+    selectedId = id;
+    const ex = exercises.find(e => e.id === id);
+    const btn = document.getElementById('btn-start');
+    const info = document.getElementById('selected-info');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    info.innerHTML = `<strong>${ex.title}</strong> — ${ex.time}s · ${ex.text.length} Zeichen`;
+    renderGrid();
+  }
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      renderGrid();
+    });
+  });
+
+  document.getElementById('btn-start').addEventListener('click', () => {
+    if (!selectedId) return;
+    const ex = exercises.find(e => e.id === selectedId);
+    sessionStorage.setItem('tm_exercise', JSON.stringify(ex));
+    window.location.href = 'type.html';
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && selectedId) {
+      document.getElementById('btn-start').click();
+    }
+  });
+
+  loadExercises();
+</script>
+</body>
+</html>
