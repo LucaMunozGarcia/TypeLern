@@ -1,1 +1,8 @@
-
+{
+  "id": 1,
+  "title": "Grundlagen",
+  "description": "Einfache kurze Sätze für absolute Einsteiger. Nur Kleinbuchstaben und Leerzeichen.",
+  "level": "easy",
+  "time": 60,
+  "text": "die katze sitzt auf der matte und schläft tief und fest die sonne scheint durch das fenster und wärmt den raum"
+}
